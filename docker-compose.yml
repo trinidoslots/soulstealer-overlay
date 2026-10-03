@@ -1,0 +1,9 @@
+services:
+  overlay:
+    build: .
+    restart: unless-stopped
+    env_file: .env.local
+    ports:
+      - "127.0.0.1:3100:3100"
+    volumes:
+      - ./data:/app/data
