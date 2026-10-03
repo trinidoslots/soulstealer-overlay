@@ -6,8 +6,10 @@ Es gibt **zwei Overlays**. Jedes ist genau **eine Browser Source mit 1920 × 108
 
 | Overlay | URL | Wofür |
 | --- | --- | --- |
-| Standard | `https://<deine-domain>/overlay` | Normale Streams. Unten rechts ein großer Banner |
-| Hunt | `https://<deine-domain>/overlay/hunt` | Bonus-Hunt-Streams. Unten rechts der Bonus Hunt, der Banner wandert klein oben in die Chat-Spalte |
+| Standard | `https://<deine-domain>/overlay` | Normale Streams. Unten links Logo, Name und „Now playing“ |
+| Hunt | `https://<deine-domain>/overlay/hunt` | Bonus-Hunt-Streams. Unten links der Bonus Hunt, „Now playing“ wandert oben in die Chat-Spalte |
+
+Der große Banner unten rechts bleibt auf beiden Overlays gleich.
 
 **Standard**
 
@@ -24,8 +26,8 @@ Auf beiden Overlays:
 | Links oben (groß) | Ausschnitt für das Spiel | – |
 | Rechts oben | Ausschnitt für die Cam | – |
 | Rechts | Kick-Chat. Startet ein Giveaway, erscheint es **oben in der Chat-Box** und schiebt den Chat nach unten. Ist das Giveaway vorbei, verschwindet es wieder | Kick + Giveaway-Modul auf soul-stealer.com |
-| Links unten | Logo, Name, Website und **Now playing** (nur wenn gerade ein Song läuft) | Spotify |
-| Rechts unten | Standard: rotierende Banner. Hunt: Bonus Hunt mit Bonusliste | `lib/config.ts` / bonushunt.gg |
+| Links unten | Standard: Logo, Name, Website und **Now playing** (nur wenn gerade ein Song läuft). Hunt: Bonus Hunt mit Bonusliste | Spotify / bonushunt.gg |
+| Rechts unten | Großer rotierender Banner, auf beiden Overlays | `lib/config.ts` |
 
 Spiel und Cam sind **echte Löcher** im Overlay. Das Overlay liegt in OBS ganz oben, Spiel und Cam darunter scheinen durch. Den Chat zeichnet das Overlay selbst, dafür brauchst du keine eigene Chat-Quelle mehr.
 
@@ -115,11 +117,16 @@ Gebraucht wird das nur für das **Hunt-Overlay**. Es liest denselben Hunt wie di
 
 Was das Hunt-Widget zeigt:
 
-- **Links** vier Zahlen: Start, Bonusse (geöffnet/gesamt), Gewinn und Break-Even. Beim Öffnen ist das der Live-Break-Even, also der Ø-Multi, der für den Rest noch nötig ist.
-- **Rechts** fünf Bonusse aus der Liste:
-  - beim **Öffnen** der aktuelle Bonus (rot, „NOW“) mit dem vorherigen und den nächsten. Die Liste wandert von selbst mit
+Das Widget sitzt unten links (dort, wo im Standard-Overlay Logo und Song stehen):
+
+- **Oben rechts** der Fortschritt, z. B. `6 / 14`
+- **Drei Zahlen**: Start, Gewinn und Break-Even. Beim Öffnen ist das der Live-Break-Even, also der Ø-Multi, der für den Rest noch nötig ist
+- **Vier Bonusse** aus der Liste:
+  - beim **Öffnen** der aktuelle Bonus (rot, „NOW“) mit dem vorherigen und den zwei nächsten. Die Liste wandert von selbst mit
   - beim **Sammeln** die zuletzt hinzugefügten Bonusse
-  - **nach dem Hunt** die fünf besten Bonusse, links stehen dann Ergebnis und Ø-Multi
+  - **nach dem Hunt** die vier besten Bonusse, oben stehen dann Ergebnis und Ø-Multi
+
+„Now playing“ steht im Hunt-Overlay oben in der Chat-Spalte, nur solange ein Song läuft.
 
 bonushunt.gg erlaubt 100 Anfragen pro Minute pro Key, geteilt mit der Website. Das Overlay fragt alle 10 Sekunden und puffert die Antwort auf dem Server. Das bleibt weit unter dem Limit.
 
@@ -203,7 +210,7 @@ So sieht der Ablauf oben in der Chat-Box aus:
 
 ## 7. Spotify verbinden
 
-Links unten steht dann schlicht **Now playing – Titel — Künstler**, solange Musik läuft. Ist Spotify pausiert oder aus, verschwindet die Zeile.
+Dann steht schlicht **Now playing – Titel — Künstler** im Overlay, solange Musik läuft: im Standard-Overlay unten links unter dem Logo, im Hunt-Overlay oben in der Chat-Spalte. Ist Spotify pausiert oder aus, verschwindet die Zeile.
 
 ### 7.1 Spotify-App anlegen (einmalig)
 
@@ -323,7 +330,7 @@ Tipps:
 
 ## 11. Banner einrichten
 
-Der Banner-Platz rotiert durch die Einträge in `lib/config.ts` → `BANNERS`, alle `BANNER_SECONDS` Sekunden (Standard 12).
+Der Banner-Platz unten rechts (912 × 234) ist auf beiden Overlays gleich. Er rotiert durch die Einträge in `lib/config.ts` → `BANNERS`, alle `BANNER_SECONDS` Sekunden (Standard 12).
 
 Es gibt zwei Arten von Bannern. Beide lassen sich mischen:
 
@@ -342,8 +349,6 @@ Es gibt zwei Arten von Bannern. Beide lassen sich mischen:
    { image: "/banners/leaderboard.png", alt: "Leaderboard" },
    ```
 4. Neu bauen (Schritt 13).
-
-Im Hunt-Overlay steht derselbe Banner verkleinert oben in der Chat-Spalte. Er hat dasselbe Seitenverhältnis, du brauchst also keine zweite Datei. Schrift im Bild daher nicht zu klein wählen.
 
 ## 12. Texte, Logo und Farben anpassen
 

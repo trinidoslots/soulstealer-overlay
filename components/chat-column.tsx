@@ -1,37 +1,47 @@
 "use client"
 
+import { useRef } from "react"
 import { CHAT } from "@/lib/config"
 import { demoChat, demoGiveaway } from "@/lib/demo"
 import { emoteUrl, parseContent, type KickMessage } from "@/lib/kick"
 import { at, CHAT_PAD, LAYOUT } from "@/lib/layout"
 import type { GiveawayResponse } from "@/lib/types"
-import { BannerRotator } from "@/components/banner-rotator"
 import { GiveawayEvent } from "@/components/giveaway-event"
+import { NowPlayingLine, useNowPlaying } from "@/components/now-playing"
+import { Reveal } from "@/components/reveal"
 import { useKickChat } from "@/components/use-kick-chat"
 import { useNow, usePoll } from "@/components/use-poll"
 
 const BADGES = new Set(["broadcaster", "moderator", "vip", "subscriber", "og", "verified", "staff"])
 
-/** Same shape as the 912x234 slot, so one banner file fits both. */
-const SMALL_BANNER = { w: LAYOUT.chat.w - CHAT_PAD * 2, h: Math.round(((LAYOUT.chat.w - CHAT_PAD * 2) * 234) / 912) }
-
 /**
  * The right-hand column: events on top, Kick chat filling the rest — the
  * layout of the Trinido stream column. Events push the chat down while they
  * are on, and give the space back when they end.
+ *
+ * `nowPlaying` is for /overlay/hunt, where the hunt has taken the brand
+ * panel's place: the song then sits at the top of the column instead.
  */
-export function ChatColumn({ demo, banner }: { demo: boolean; banner: boolean }) {
+export function ChatColumn({ demo, nowPlaying }: { demo: boolean; nowPlaying: boolean }) {
   const data = usePoll<GiveawayResponse>("/api/giveaway", 2000, demo ? () => ({ giveaway: demoGiveaway(), configured: true }) : undefined)
   const live = useKickChat(!demo)
   const tick = useNow(demo ? 500 : 60_000)
   const messages = demo ? demoChat(tick) : live
+  const song = useNowPlaying(demo)
+  // Keep drawing the last song while its card folds away, not an empty card.
+  const lastSong = useRef(song)
+  if (song) lastSong.current = song
 
   return (
     <div className="panel" style={{ ...at(LAYOUT.chat), padding: CHAT_PAD, display: "flex", flexDirection: "column" }}>
-      {banner && (
-        <div style={{ position: "relative", flex: "none", height: SMALL_BANNER.h, marginBottom: 10 }}>
-          <BannerRotator size="sm" style={{ left: 0, top: 0, width: SMALL_BANNER.w, height: SMALL_BANNER.h }} />
-        </div>
+      {nowPlaying && (
+        <Reveal show={!!song}>
+          {lastSong.current && (
+            <div style={{ padding: "12px 14px", marginBottom: 10, borderRadius: 10, background: "var(--sunk)", border: "1px solid var(--line-soft)" }}>
+              <NowPlayingLine song={lastSong.current} />
+            </div>
+          )}
+        </Reveal>
       )}
 
       <GiveawayEvent giveaway={data?.giveaway ?? null} />

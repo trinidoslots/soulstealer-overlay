@@ -30,9 +30,7 @@ export const CHAT = {
 }
 
 /**
- * The banner slot. 912x234 at the bottom of /overlay, and the same artwork
- * shrunk into the top of the chat column on /overlay/hunt — both are the same
- * shape, so one file serves both.
+ * The banner slot, 912x234 at the bottom right of both overlays.
  *
  * Two kinds of entry:
  *   { image: "/banners/leaderboard.png", alt: "Leaderboard" }
