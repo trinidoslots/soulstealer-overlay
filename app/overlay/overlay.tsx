@@ -9,9 +9,9 @@ import { Frame, Plate } from "@/components/scene"
 import { Stage } from "@/components/stage"
 
 /**
- * Both overlays. They differ in one slot, bottom left: the standard one has
- * the brand with the song under it, the hunt one has the bonus hunt there and
- * moves the song to the top of the chat column. The banner never moves.
+ * Both overlays. They differ in one slot, bottom left: the brand on the
+ * standard one, the bonus hunt on the hunt one. Everything else — the chat
+ * with the song and giveaways on top, the big banner — is the same.
  */
 export function Overlay({ demo, plate, hunt }: { demo: boolean; plate: boolean; hunt: boolean }) {
   return (
@@ -20,8 +20,8 @@ export function Overlay({ demo, plate, hunt }: { demo: boolean; plate: boolean; 
       <Frame rect={LAYOUT.game} />
       <Frame rect={LAYOUT.cam} />
 
-      <ChatColumn demo={demo} nowPlaying={hunt} />
-      {hunt ? <HuntPanel demo={demo} /> : <BrandPanel demo={demo} />}
+      <ChatColumn demo={demo} />
+      {hunt ? <HuntPanel demo={demo} /> : <BrandPanel />}
       <BannerRotator style={at(LAYOUT.banner)} />
     </Stage>
   )

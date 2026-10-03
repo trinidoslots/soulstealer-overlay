@@ -19,10 +19,9 @@ const BADGES = new Set(["broadcaster", "moderator", "vip", "subscriber", "og", "
  * layout of the Trinido stream column. Events push the chat down while they
  * are on, and give the space back when they end.
  *
- * `nowPlaying` is for /overlay/hunt, where the hunt has taken the brand
- * panel's place: the song then sits at the top of the column instead.
+ * The song Spotify is playing sits at the very top, only while it plays.
  */
-export function ChatColumn({ demo, nowPlaying }: { demo: boolean; nowPlaying: boolean }) {
+export function ChatColumn({ demo }: { demo: boolean }) {
   const data = usePoll<GiveawayResponse>("/api/giveaway", 2000, demo ? () => ({ giveaway: demoGiveaway(), configured: true }) : undefined)
   const live = useKickChat(!demo)
   const tick = useNow(demo ? 500 : 60_000)
@@ -34,15 +33,13 @@ export function ChatColumn({ demo, nowPlaying }: { demo: boolean; nowPlaying: bo
 
   return (
     <div className="panel" style={{ ...at(LAYOUT.chat), padding: CHAT_PAD, display: "flex", flexDirection: "column" }}>
-      {nowPlaying && (
-        <Reveal show={!!song}>
-          {lastSong.current && (
-            <div style={{ padding: "12px 14px", marginBottom: 10, borderRadius: 10, background: "var(--sunk)", border: "1px solid var(--line-soft)" }}>
-              <NowPlayingLine song={lastSong.current} />
-            </div>
-          )}
-        </Reveal>
-      )}
+      <Reveal show={!!song}>
+        {lastSong.current && (
+          <div style={{ padding: "12px 14px", marginBottom: 10, borderRadius: 10, background: "var(--sunk)", border: "1px solid var(--line-soft)" }}>
+            <NowPlayingLine song={lastSong.current} />
+          </div>
+        )}
+      </Reveal>
 
       <GiveawayEvent giveaway={data?.giveaway ?? null} />
 
