@@ -1,19 +1,6 @@
 /** Shapes the API routes hand to the overlay. Shared by server and client. */
 
-export type NowPlaying =
-  | { playing: false; connected: boolean }
-  | {
-      playing: true
-      connected: true
-      title: string
-      artists: string
-      album: string | null
-      image: string | null
-      progressMs: number
-      durationMs: number
-      /** Server time the progress was read at, so the client can run the bar on. */
-      readAt: number
-    }
+export type NowPlaying = { playing: false } | { playing: true; title: string; artists: string }
 
 export type HuntBonus = {
   id: string

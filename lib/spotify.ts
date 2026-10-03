@@ -9,7 +9,7 @@ import type { NowPlaying } from "@/lib/types"
  * env still works as a fallback. Access tokens only ever live in memory.
  */
 
-export const SPOTIFY_SCOPES = "user-read-currently-playing user-read-playback-state"
+export const SPOTIFY_SCOPES = "user-read-currently-playing"
 export const STATE_COOKIE = "spotify_oauth_state"
 
 export function spotifyCredentials() {
@@ -106,30 +106,16 @@ let lastRead: { at: number; value: NowPlaying } | null = null
 
 type CurrentlyPlaying = {
   is_playing?: boolean
-  progress_ms?: number | null
   currently_playing_type?: string
-  item?: {
-    name?: string
-    duration_ms?: number
-    artists?: { name?: string }[]
-    album?: { name?: string; images?: { url: string; width?: number }[] }
-    show?: { name?: string; images?: { url: string; width?: number }[] }
-    images?: { url: string; width?: number }[]
-  } | null
+  item?: { name?: string; artists?: { name?: string }[]; show?: { name?: string } } | null
 }
 
-/** The smallest cover that is still at least `min` px wide. */
-function pickImage(images: { url: string; width?: number }[] | undefined, min = 160): string | null {
-  if (!images?.length) return null
-  const sorted = [...images].sort((a, b) => (a.width ?? 0) - (b.width ?? 0))
-  return (sorted.find((image) => (image.width ?? 0) >= min) ?? sorted[sorted.length - 1]).url
-}
-
+/** Title and artist of what is playing right now — nothing more is shown. */
 export async function readNowPlaying(): Promise<NowPlaying> {
   if (lastRead && Date.now() - lastRead.at < REUSE_MS) return lastRead.value
 
   const token = await currentAccessToken()
-  if (!token) return { playing: false, connected: false }
+  if (!token) return { playing: false }
 
   const response = await fetch("https://api.spotify.com/v1/me/player/currently-playing?additional_types=episode", {
     headers: { Authorization: `Bearer ${token}` },
@@ -142,30 +128,21 @@ export async function readNowPlaying(): Promise<NowPlaying> {
   }
   if (!response.ok && response.status !== 204) throw new Error(`Spotify said ${response.status}.`)
 
-  // 204: Spotify is closed or nothing is queued.
+  // 204: Spotify is closed or nothing is queued. Paused is is_playing: false.
   const data: CurrentlyPlaying | null = response.status === 204 ? null : await response.json().catch(() => null)
   const item = data?.item
   const title = item?.name?.trim()
 
-  let value: NowPlaying = { playing: false, connected: true }
+  let value: NowPlaying = { playing: false }
   if (data?.is_playing && item && title) {
-    const episode = data.currently_playing_type === "episode"
-    value = {
-      playing: true,
-      connected: true,
-      title,
-      artists: episode
+    const artists =
+      data.currently_playing_type === "episode"
         ? (item.show?.name ?? "")
         : (item.artists ?? [])
             .map((artist) => artist.name?.trim())
             .filter(Boolean)
-            .join(", "),
-      album: episode ? null : (item.album?.name ?? null),
-      image: pickImage(episode ? (item.images ?? item.show?.images) : item.album?.images),
-      progressMs: data.progress_ms ?? 0,
-      durationMs: item.duration_ms ?? 0,
-      readAt: Date.now(),
-    }
+            .join(", ")
+    value = { playing: true, title, artists }
   }
 
   lastRead = { at: Date.now(), value }

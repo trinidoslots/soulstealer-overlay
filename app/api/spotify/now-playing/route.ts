@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { readNowPlaying, spotifyConnected } from "@/lib/spotify"
+import { readNowPlaying } from "@/lib/spotify"
 
 /**
  * Public on purpose: OBS has no session. It hands out what is audible on
@@ -15,9 +15,6 @@ export async function GET() {
     return NextResponse.json(await readNowPlaying(), { headers: { "Cache-Control": "no-store" } })
   } catch (error) {
     console.error("[spotify] now playing:", error)
-    return NextResponse.json(
-      { playing: false, connected: await spotifyConnected() },
-      { headers: { "Cache-Control": "no-store" } },
-    )
+    return NextResponse.json({ playing: false }, { headers: { "Cache-Control": "no-store" } })
   }
 }

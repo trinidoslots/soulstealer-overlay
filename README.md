@@ -1,26 +1,33 @@
 # Soul Stealer – OBS Overlay
 
-Ein komplettes Stream-Overlay für **Soul Stealer** ([soul-stealer.com](https://soul-stealer.com)) in Schwarz/Grau/Rot, schlicht und modern.
+Ein schlichtes Stream-Overlay für **Soul Stealer** ([soul-stealer.com](https://soul-stealer.com)) in Schwarz, Grau und einem Hauch Rot.
 
-**Am Ende ist es genau eine Browser Source in OBS: `https://<deine-domain>/overlay` mit 1920 × 1080.**
-Alles andere in diesem Repo sind nur die Bausteine dieser einen Seite.
+Es gibt **zwei Overlays**. Jedes ist genau **eine Browser Source mit 1920 × 1080**:
 
-![Vorschau](docs/preview.png)
+| Overlay | URL | Wofür |
+| --- | --- | --- |
+| Standard | `https://<deine-domain>/overlay` | Normale Streams. Unten rechts ein großer Banner |
+| Hunt | `https://<deine-domain>/overlay/hunt` | Bonus-Hunt-Streams. Unten rechts der Bonus Hunt, der Banner wandert klein oben in die Chat-Spalte |
 
-Auf dem Overlay:
+**Standard**
+
+![Standard-Overlay](docs/preview.png)
+
+**Hunt**
+
+![Hunt-Overlay](docs/preview-hunt.png)
+
+Auf beiden Overlays:
 
 | Bereich | Inhalt | Datenquelle |
 | --- | --- | --- |
-| Oben rechts | Logo + `soul-stealer.com` | `lib/config.ts` |
-| Rahmen links (groß) | Ausschnitt für das Spiel | – |
-| Rahmen rechts oben | Ausschnitt für die Cam | – |
-| Rahmen rechts unten | Ausschnitt für den Chat | – |
-| Unten links oben | Aktueller Spotify-Song mit Cover und Fortschritt | Spotify Web API |
-| Unten links unten | Wechselnde Promo-Texte (`!website`, `!join` …) | `lib/config.ts` |
-| Unten Mitte | Bonus Hunt: Start, Bonusse, Gewinn, Break-Even, aktueller Bonus | bonushunt.gg API |
-| Unten rechts | Giveaway: Preis, Befehl, Teilnehmer, Timer, Ziehung, Gewinner | Giveaway-Modul auf soul-stealer.com |
+| Links oben (groß) | Ausschnitt für das Spiel | – |
+| Rechts oben | Ausschnitt für die Cam | – |
+| Rechts | Kick-Chat. Startet ein Giveaway, erscheint es **oben in der Chat-Box** und schiebt den Chat nach unten. Ist das Giveaway vorbei, verschwindet es wieder | Kick + Giveaway-Modul auf soul-stealer.com |
+| Links unten | Logo, Name, Website und **Now playing** (nur wenn gerade ein Song läuft) | Spotify |
+| Rechts unten | Standard: rotierende Banner. Hunt: Bonus Hunt mit Bonusliste | `lib/config.ts` / bonushunt.gg |
 
-Spiel, Cam und Chat sind **echte Löcher** im Overlay. Das Overlay liegt in OBS ganz oben, die drei Quellen darunter scheinen durch.
+Spiel und Cam sind **echte Löcher** im Overlay. Das Overlay liegt in OBS ganz oben, Spiel und Cam darunter scheinen durch. Den Chat zeichnet das Overlay selbst, dafür brauchst du keine eigene Chat-Quelle mehr.
 
 ---
 
@@ -30,15 +37,17 @@ Spiel, Cam und Chat sind **echte Löcher** im Overlay. Das Overlay liegt in OBS 
 2. [Projekt auf den Server holen](#2-projekt-auf-den-server-holen)
 3. [Konfiguration anlegen (.env.local)](#3-konfiguration-anlegen-envlocal)
 4. [bonushunt.gg verbinden](#4-bonushuntgg-verbinden)
-5. [Giveaway-Modul verbinden](#5-giveaway-modul-verbinden)
-6. [Spotify verbinden](#6-spotify-verbinden)
-7. [Bauen und dauerhaft starten (PM2)](#7-bauen-und-dauerhaft-starten-pm2)
-8. [Domain und HTTPS (nginx)](#8-domain-und-https-nginx)
-9. [In OBS einrichten](#9-in-obs-einrichten)
-10. [Texte, Logo und Farben anpassen](#10-texte-logo-und-farben-anpassen)
-11. [Updates einspielen](#11-updates-einspielen)
-12. [Alternative: Docker](#12-alternative-docker)
-13. [Fehlerbehebung](#13-fehlerbehebung)
+5. [Kick-Chat einstellen](#5-kick-chat-einstellen)
+6. [Giveaway-Modul verbinden](#6-giveaway-modul-verbinden)
+7. [Spotify verbinden](#7-spotify-verbinden)
+8. [Bauen und dauerhaft starten (PM2)](#8-bauen-und-dauerhaft-starten-pm2)
+9. [Domain und HTTPS (nginx)](#9-domain-und-https-nginx)
+10. [In OBS einrichten](#10-in-obs-einrichten)
+11. [Banner einrichten](#11-banner-einrichten)
+12. [Texte, Logo und Farben anpassen](#12-texte-logo-und-farben-anpassen)
+13. [Updates einspielen](#13-updates-einspielen)
+14. [Alternative: Docker](#14-alternative-docker)
+15. [Fehlerbehebung](#15-fehlerbehebung)
 
 ---
 
@@ -56,7 +65,7 @@ Gebraucht werden ein Linux-Server (z. B. Ubuntu 22.04/24.04), auf dem du `root` 
    ```bash
    sudo npm install -g pm2
    ```
-4. nginx und certbot installieren (für HTTPS, siehe Schritt 8):
+4. nginx und certbot installieren (für HTTPS, siehe Schritt 9):
    ```bash
    sudo apt-get install -y nginx certbot python3-certbot-nginx
    ```
@@ -88,14 +97,14 @@ Das Repo ist privat. Fragt `git clone` nach Zugangsdaten, nimm deinen GitHub-Ben
      openssl rand -hex 24
      ```
      Den Key brauchst du nur einmal, beim Spotify-Verbinden. Er gehört nicht in den Stream.
-3. Die restlichen Werte kommen in den Schritten 4–6 dazu.
+3. Die restlichen Werte kommen in den Schritten 4–7 dazu.
 4. Speichern mit `Strg+O`, `Enter`, `Strg+X`.
 
 Die `.env.local` wird nie committet (steht in `.gitignore`).
 
 ## 4. bonushunt.gg verbinden
 
-Das Overlay liest denselben Hunt wie die Website. Dafür reicht derselbe API-Key.
+Gebraucht wird das nur für das **Hunt-Overlay**. Es liest denselben Hunt wie die Website, mit demselben API-Key.
 
 1. Auf [bonushunt.gg](https://bonushunt.gg) einloggen und in den Einstellungen den API-Key kopieren. Oder den Key nehmen, den soul-stealer.com schon benutzt (steht dort in der Server-Konfiguration).
 2. In `.env.local` eintragen:
@@ -104,20 +113,44 @@ Das Overlay liest denselben Hunt wie die Website. Dafür reicht derselbe API-Key
    ```
 3. Optional: `BONUSHUNT_SHOW_COMPLETED_HOURS=12` legt fest, wie viele Stunden ein abgeschlossener Hunt noch mit Ergebnis im Overlay steht. `0` heißt: abgeschlossene Hunts nie zeigen.
 
-Was das Overlay zeigt:
+Was das Hunt-Widget zeigt:
 
-- **Collecting**: Startbetrag, Anzahl Bonusse, Break-Even und den zuletzt hinzugefügten Bonus
-- **Opening**: Startbetrag, geöffnet/gesamt, bisheriger Gewinn, Live-Break-Even (benötigter Ø-Multi für den Rest) und den Bonus, der gerade geöffnet wird
-- **Finished**: Ergebnis (+/−), Ø-Multi und der beste Bonus
-- **Kein Hunt**: eine ruhige Leerkarte
+- **Links** vier Zahlen: Start, Bonusse (geöffnet/gesamt), Gewinn und Break-Even. Beim Öffnen ist das der Live-Break-Even, also der Ø-Multi, der für den Rest noch nötig ist.
+- **Rechts** fünf Bonusse aus der Liste:
+  - beim **Öffnen** der aktuelle Bonus (rot, „NOW“) mit dem vorherigen und den nächsten. Die Liste wandert von selbst mit
+  - beim **Sammeln** die zuletzt hinzugefügten Bonusse
+  - **nach dem Hunt** die fünf besten Bonusse, links stehen dann Ergebnis und Ø-Multi
 
-bonushunt.gg erlaubt 100 Anfragen pro Minute pro Key, geteilt mit der Website. Das Overlay fragt alle 10 Sekunden und puffert die Antwort auf dem Server. Das bleibt weit unter dem Limit, auch wenn das Overlay in mehreren Szenen offen ist.
+bonushunt.gg erlaubt 100 Anfragen pro Minute pro Key, geteilt mit der Website. Das Overlay fragt alle 10 Sekunden und puffert die Antwort auf dem Server. Das bleibt weit unter dem Limit.
 
-## 5. Giveaway-Modul verbinden
+## 5. Kick-Chat einstellen
 
-Das Giveaway läuft weiter über das Admin-Panel auf soul-stealer.com. Das Overlay liest dafür nur den aktuellen Stand über eine URL.
+Das Overlay liest den Kick-Chat direkt, genauso wie Kicks eigene Webseite. Dafür braucht es keinen Login und keinen Key.
 
-### 5.1 Endpunkt auf soul-stealer.com bereitstellen
+1. In `lib/config.ts` bei `CHAT.channel` den Kanalnamen eintragen, so wie er in der Adresse steht (`kick.com/soulstealer` → `soulstealer`).
+   Alternativ ohne Neubau in `.env.local`: `KICK_CHANNEL=soulstealer`
+2. Nach dem Start (Schritt 8) prüfen:
+   ```bash
+   curl -s localhost:3100/api/kick/chatroom
+   ```
+   Kommt `{"chatroomId": 1234567}`, ist alles gut.
+3. Kommt stattdessen ein Fehler, blockiert Kick die Abfrage vom Server (Cloudflare). Dann die ID einmal von Hand holen:
+   - im normalen Browser `https://kick.com/api/v2/channels/soulstealer` öffnen
+   - nach `"chatroom":{"id":` suchen und die Zahl dahinter kopieren
+   - in `.env.local` eintragen: `KICK_CHATROOM_ID=1234567`
+
+   Die ID ändert sich für einen Kanal nie, das ist also einmalig.
+
+Optionen in `lib/config.ts` → `CHAT`:
+
+- `nameColors: false` (Standard) zeigt Namen weiß und Mods/Streamer rot, passend zum Overlay. Mit `true` bekommt jeder Name seine Kick-Farbe.
+- `limit`: wie viele Nachrichten höchstens gehalten werden
+
+## 6. Giveaway-Modul verbinden
+
+Das Giveaway läuft weiter über das Admin-Panel auf soul-stealer.com. Das Overlay liest nur den aktuellen Stand über eine URL. Startet ein Giveaway, schiebt sich die Giveaway-Karte innerhalb von 2 Sekunden oben in die Chat-Box. Ist es vorbei (`idle`), verschwindet sie wieder.
+
+### 6.1 Endpunkt auf soul-stealer.com bereitstellen
 
 Die Website braucht eine URL, die per `GET` den aktuellen Giveaway-Zustand als JSON zurückgibt, z. B. `https://soul-stealer.com/api/giveaway/current`. Hat das Modul so etwas schon, nimm einfach diese URL.
 
@@ -138,20 +171,20 @@ Das Overlay erwartet am besten dieses Format:
 
 | Feld | Bedeutung |
 | --- | --- |
-| `status` | `idle` (nichts läuft), `open` (Teilnahme offen), `closed` (Teilnahme zu), `rolling` (wird gezogen), `finished` (Gewinner steht fest) |
+| `status` | `idle` (nichts läuft, Karte unsichtbar), `open` (Teilnahme offen), `closed` (Teilnahme zu), `rolling` (wird gezogen), `finished` (Gewinner steht fest) |
 | `title` | Was gewonnen wird, z. B. `$250 Giveaway` |
 | `keyword` | Chat-Befehl zum Mitmachen. `join` wird automatisch zu `!join` |
 | `entries` | Anzahl der Teilnehmer |
 | `entrants` | Namen der Teilnehmer, optional. Laufen während `rolling` durch |
 | `started_at` | Startzeit, optional. Ohne `ends_at` läuft dann ein Timer hoch |
-| `ends_at` | Endzeit, optional. Dann gibt es einen Countdown und einen ablaufenden Balken |
+| `ends_at` | Endzeit, optional. Dann gibt es einen Countdown und eine ablaufende Linie |
 | `winner` | Name des Gewinners (oder `{ "username": "…" }`) |
 
 Das Overlay ist bei den Feldnamen tolerant. Es versteht auch camelCase (`endsAt`, `isActive`, `entryCount` …), Objekte statt Strings (`{ "username": "…" }`), eine Hülle wie `{ "giveaway": { … } }` oder `{ "data": { … } }` und Status-Wörter wie `active`, `running`, `drawing`, `completed`. Ein bestehender Endpunkt funktioniert deshalb meistens schon ohne Umbau. Die genauen Regeln stehen in `lib/giveaway.ts`.
 
 Der Endpunkt darf öffentlich sein. Er zeigt nur, was ohnehin im Stream zu sehen ist. Wenn er geschützt werden soll, prüft die Website einfach den Header `Authorization: Bearer <key>`.
 
-### 5.2 Im Overlay eintragen
+### 6.2 Im Overlay eintragen
 
 In `.env.local`:
 
@@ -161,18 +194,18 @@ GIVEAWAY_API_URL=https://soul-stealer.com/api/giveaway/current
 GIVEAWAY_API_KEY=
 ```
 
-Das Overlay fragt alle 2 Sekunden nach. Startest du ein Giveaway im Admin-Panel, erscheint es also nach spätestens 2 Sekunden im Stream.
+So sieht der Ablauf oben in der Chat-Box aus:
 
-So sieht der Ablauf im Stream aus:
+1. `open`: Preis, „Type !join to enter“, Teilnehmerzahl, Countdown
+2. `rolling`: Teilnehmernamen laufen durch
+3. `finished`: Gewinnername groß
+4. `idle`: Die Karte klappt weg, der Chat hat wieder den ganzen Platz
 
-1. `open`: Preis, großer roter Chat-Befehl, Teilnehmerzahl, Countdown
-2. `rolling`: Teilnehmernamen laufen schnell durch
-3. `finished`: Gewinnername groß, mit rotem Glow
-4. `idle`: „No giveaway running“. Hier steht **kein** Admin-Hinweis mehr im Stream
+## 7. Spotify verbinden
 
-## 6. Spotify verbinden
+Links unten steht dann schlicht **Now playing – Titel — Künstler**, solange Musik läuft. Ist Spotify pausiert oder aus, verschwindet die Zeile.
 
-### 6.1 Spotify-App anlegen (einmalig)
+### 7.1 Spotify-App anlegen (einmalig)
 
 1. [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard) öffnen und mit **seinem** Spotify-Konto einloggen (dem, auf dem im Stream Musik läuft).
 2. **Create app** klicken.
@@ -184,14 +217,14 @@ So sieht der Ablauf im Stream aus:
 3. In der App auf **Settings** gehen und **Client ID** und **Client secret** (über „View client secret“) kopieren.
 4. Unter **User Management** das Spotify-Konto (Name + E-Mail) eintragen, dessen Musik angezeigt werden soll. Neue Apps laufen im „Development Mode“, und da dürfen nur eingetragene Konten sich verbinden.
 
-### 6.2 In .env.local eintragen
+### 7.2 In .env.local eintragen
 
 ```
 SPOTIFY_CLIENT_ID=…
 SPOTIFY_CLIENT_SECRET=…
 ```
 
-### 6.3 Konto verbinden (nach Schritt 7 und 8, wenn das Overlay erreichbar ist)
+### 7.3 Konto verbinden (nach Schritt 8 und 9, wenn das Overlay erreichbar ist)
 
 1. Im Browser öffnen:
    ```
@@ -201,9 +234,9 @@ SPOTIFY_CLIENT_SECRET=…
 3. Es erscheint „Spotify verbunden“. Das Token liegt jetzt in `data/store.json` auf dem Server und überlebt Neustarts. Du musst nichts kopieren.
 4. Ein Lied abspielen. Nach wenigen Sekunden steht es im Overlay.
 
-Ein anderes Konto verbindest du, indem du einfach den Login-Link nochmal öffnest. Läuft keine Musik oder ist sie pausiert, zeigt die Karte „Nothing playing“.
+Ein anderes Konto verbindest du, indem du einfach den Login-Link nochmal öffnest.
 
-## 7. Bauen und dauerhaft starten (PM2)
+## 8. Bauen und dauerhaft starten (PM2)
 
 ```bash
 cd /var/www/soulstealer-overlay
@@ -213,12 +246,13 @@ pm2 save
 pm2 startup          # gibt einen Befehl aus. Den einmal kopieren und ausführen
 ```
 
-Das Overlay läuft jetzt auf `127.0.0.1:3100`, nur lokal erreichbar. Nach außen geht es über nginx (Schritt 8).
+Das Overlay läuft jetzt auf `127.0.0.1:3100`, nur lokal erreichbar. Nach außen geht es über nginx (Schritt 9).
 
 Prüfen:
 
 ```bash
 pm2 status                       # soulstealer-overlay sollte "online" sein
+curl -s localhost:3100/api/kick/chatroom
 curl -s localhost:3100/api/giveaway
 ```
 
@@ -226,7 +260,7 @@ Port 3100 ist schon belegt? Dann in `deploy/ecosystem.config.cjs` (`-p 3100`) un
 
 **Wichtig:** Nach jeder Änderung an `.env.local` einmal `pm2 restart soulstealer-overlay` ausführen.
 
-## 8. Domain und HTTPS (nginx)
+## 9. Domain und HTTPS (nginx)
 
 1. **DNS**: Bei deinem Domain-Anbieter einen `A`-Eintrag `overlay` → IP des Servers anlegen. Ein paar Minuten warten.
 2. **nginx-Konfiguration** übernehmen:
@@ -241,19 +275,23 @@ Port 3100 ist schon belegt? Dann in `deploy/ecosystem.config.cjs` (`-p 3100`) un
    sudo certbot --nginx -d overlay.soul-stealer.com
    ```
 4. Im Browser `https://overlay.soul-stealer.com` öffnen. Die Statusseite zeigt pro Integration **OK** oder was noch fehlt.
-5. `https://overlay.soul-stealer.com/overlay?demo=1` zeigt das Overlay mit Beispieldaten, inklusive des kompletten Giveaway-Ablaufs.
+5. Mit Beispieldaten testen, inklusive eines Giveaways, das in die Chat-Box fährt:
+   - `https://overlay.soul-stealer.com/overlay?demo=1`
+   - `https://overlay.soul-stealer.com/overlay/hunt?demo=1`
 
-Jetzt kannst du Schritt 6.3 (Spotify verbinden) machen.
+Jetzt kannst du Schritt 7.3 (Spotify verbinden) machen.
 
-## 9. In OBS einrichten
+## 10. In OBS einrichten
 
-### 9.1 Die Overlay-Quelle
+Am einfachsten sind zwei Szenen, z. B. **„Stream“** und **„Bonus Hunt“**. Jede bekommt ihr Overlay. Spiel und Cam liegen in beiden an derselben Stelle, du kannst sie also als Szenen-Quellen wiederverwenden („Vorhandene hinzufügen“).
 
-1. In der Szene **+** → **Browser** → Name `Soul Stealer Overlay`.
+### 10.1 Overlay-Quelle anlegen (pro Szene)
+
+1. In der Szene **+** → **Browser**.
+   Name: `Overlay` in der Szene „Stream“ und `Overlay Hunt` in der Szene „Bonus Hunt“.
 2. Einstellungen:
-   - **URL**: `https://overlay.soul-stealer.com/overlay`
+   - **URL**: `https://overlay.soul-stealer.com/overlay` bzw. `https://overlay.soul-stealer.com/overlay/hunt`
    - **Breite**: `1920`, **Höhe**: `1080`
-   - **Benutzerdefiniertes CSS**: Feld leeren
    - **Quelle herunterfahren, wenn nicht sichtbar**: aus
    - **Browser aktualisieren, wenn Szene aktiv wird**: aus
 3. **OK**. In der Quellenliste ganz **nach oben** ziehen, damit das Overlay über allem liegt.
@@ -261,46 +299,66 @@ Jetzt kannst du Schritt 6.3 (Spotify verbinden) machen.
 
 Die Canvas-Auflösung in OBS (Einstellungen → Video → Basis-Auflösung) sollte 1920×1080 sein.
 
-### 9.2 Spiel, Cam und Chat in die Ausschnitte setzen
+### 10.2 Spiel und Cam in die Ausschnitte setzen
 
-Die drei Quellen liegen **unter** dem Overlay. Damit sie exakt passen, gibst du die Werte direkt ein: Quelle auswählen → Rechtsklick → **Transformieren** → **Transformation bearbeiten** (`Strg+E`).
+Beide Quellen liegen **unter** dem Overlay. Damit sie exakt passen, gibst du die Werte direkt ein: Quelle auswählen → Rechtsklick → **Transformieren** → **Transformation bearbeiten** (`Strg+E`).
 
 | Quelle | Position X | Position Y | Größe Breite | Größe Höhe |
 | --- | --- | --- | --- | --- |
 | Spiel / Browser-Capture | 24 | 24 | 1376 | 774 |
-| Cam | 1424 | 104 | 472 | 266 |
-| Chat | 1424 | 394 | 472 | 662 |
+| Cam | 1424 | 24 | 472 | 266 |
 
 Tipps:
 
 - Die Cam hat 16:9. Passt das Bild nicht, nutze bei „Begrenzungsrahmen-Typ“ **Auf Größe des Begrenzungsrahmens skalieren**, oder schneide mit **Zuschneiden** zu.
 - Ein Rand von ein paar Pixeln über die Ausschnitte hinaus schadet nicht. Das Overlay deckt ihn ab.
-- Die alten Overlay-Quellen (Song, Banner, Giveaway-Kasten) kannst du löschen oder ausblenden, die macht jetzt alles diese eine Quelle.
+- Die alten Quellen (Chat-Overlay, Song, Banner, Giveaway-Kasten) kannst du löschen. Das alles macht jetzt das Overlay.
 
-### 9.3 Varianten über die URL
+### 10.3 Optionen über die URL
 
-| URL | Wirkung |
+| Anhang | Wirkung |
 | --- | --- |
-| `/overlay` | Normalbetrieb |
-| `/overlay?demo=1` | Beispieldaten für alle Karten, zum Testen ohne Live-Daten |
-| `/overlay?bg=0` | Ohne dunklen Hintergrund. Nur Rahmen und Karten, z. B. über einer eigenen Hintergrund-Grafik |
-| `/overlay?fx=0` | Ohne die langsam aufsteigenden roten Partikel |
+| `?demo=1` | Beispieldaten in allen Bereichen, zum Testen ohne Live-Daten |
+| `?bg=0` | Ohne dunklen Hintergrund. Nur Panels und Linien, z. B. über einer eigenen Hintergrund-Grafik |
 
-Mehrere Parameter kombinierst du mit `&`, z. B. `/overlay?bg=0&fx=0`.
+## 11. Banner einrichten
 
-## 10. Texte, Logo und Farben anpassen
+Der Banner-Platz rotiert durch die Einträge in `lib/config.ts` → `BANNERS`, alle `BANNER_SECONDS` Sekunden (Standard 12).
 
-Alles hier sind normale Dateien. Nach einer Änderung immer [Schritt 11](#11-updates-einspielen) ausführen.
+Es gibt zwei Arten von Bannern. Beide lassen sich mischen:
+
+**a) Text-Banner** im Stil des Overlays. Dafür brauchst du keine Grafik:
+
+```ts
+{ kicker: "Leaderboards", title: "Over $5,000 paid out every month", cta: "!website" },
+```
+
+**b) Eigene Bilder:**
+
+1. Bild in **1824 × 468 px** gestalten (PNG oder JPG). Das ist die doppelte Größe des Slots, so bleibt es scharf.
+2. Datei nach `public/banners/` legen, z. B. `public/banners/leaderboard.png`.
+3. In `lib/config.ts` eintragen:
+   ```ts
+   { image: "/banners/leaderboard.png", alt: "Leaderboard" },
+   ```
+4. Neu bauen (Schritt 13).
+
+Im Hunt-Overlay steht derselbe Banner verkleinert oben in der Chat-Spalte. Er hat dasselbe Seitenverhältnis, du brauchst also keine zweite Datei. Schrift im Bild daher nicht zu klein wählen.
+
+## 12. Texte, Logo und Farben anpassen
+
+Nach jeder Änderung [Schritt 13](#13-updates-einspielen) ausführen.
 
 | Was | Wo |
 | --- | --- |
-| Name, Website-Text, Text der leeren Giveaway-Karte, Währung | `lib/config.ts` → `BRAND` |
-| Wechselnde Promo-Texte und ihre Anzeigedauer | `lib/config.ts` → `TICKER`, `TICKER_SECONDS` |
+| Name, Website-Text, Währung | `lib/config.ts` → `BRAND` |
 | Echtes Logo statt der gezeichneten Sense | Datei nach `public/logo.png` legen, in `lib/config.ts` `logo: "/logo.png"` setzen |
+| Kick-Kanal, Namensfarben | `lib/config.ts` → `CHAT` |
+| Banner | `lib/config.ts` → `BANNERS` (Schritt 11) |
 | Farben (Rot, Grautöne, Hintergrund) | `app/globals.css`, ganz oben unter `:root` |
-| Positionen und Größen aller Bereiche | `lib/layout.ts`. Danach die Tabelle in 9.2 anpassen |
+| Positionen und Größen | `lib/layout.ts`. Danach die Tabelle in 10.2 anpassen |
 
-## 11. Updates einspielen
+## 13. Updates einspielen
 
 ```bash
 cd /var/www/soulstealer-overlay
@@ -312,37 +370,37 @@ pm2 restart soulstealer-overlay
 
 OBS lädt die Seite beim nächsten Szenenwechsel neu. Sofort geht es per Rechtsklick auf die Quelle → **Aktualisieren**.
 
-## 12. Alternative: Docker
+## 14. Alternative: Docker
 
-Wenn auf dem Server lieber alles in Docker läuft, ersetzt das die Schritte 1 (bis auf nginx), 7 und 11:
+Wenn auf dem Server lieber alles in Docker läuft, ersetzt das die Schritte 1 (bis auf nginx), 8 und 13:
 
 ```bash
-cp .env.example .env.local   # ausfüllen wie in Schritt 3–6
+cp .env.example .env.local   # ausfüllen wie in Schritt 3–7
 docker compose up -d --build
 ```
 
-- Das Overlay lauscht auf `127.0.0.1:3100`. nginx und HTTPS genauso wie in Schritt 8.
+- Das Overlay lauscht auf `127.0.0.1:3100`. nginx und HTTPS genauso wie in Schritt 9.
 - Das Spotify-Token liegt in `./data`. Der Ordner ist eingebunden und überlebt Neubauten.
 - Update: `git pull && docker compose up -d --build`
 - Nach Änderung an `.env.local`: `docker compose up -d`
 
-## 13. Fehlerbehebung
+## 15. Fehlerbehebung
 
 | Problem | Lösung |
 | --- | --- |
 | Statusseite zeigt rote Punkte | Fehlender Wert in `.env.local`. Eintragen, dann `pm2 restart soulstealer-overlay` |
+| Chat bleibt leer | Kanalname in `CHAT.channel` bzw. `KICK_CHANNEL` prüfen. `curl -s localhost:3100/api/kick/chatroom` muss eine `chatroomId` liefern, sonst `KICK_CHATROOM_ID` setzen (Schritt 5) |
+| Giveaway erscheint nicht im Chat | `GIVEAWAY_API_URL` im Browser öffnen: Kommt JSON mit einem Status? `curl -s localhost:3100/api/giveaway` zeigt, wie das Overlay es versteht |
+| Hunt-Widget leer | API-Key prüfen. `curl -s localhost:3100/api/bonushunt` zeigt `"configured": true` und den Hunt. `pm2 logs soulstealer-overlay` zeigt Fehler von bonushunt.gg |
 | Spotify: „INVALID_CLIENT: Invalid redirect URI“ | Die Redirect URI im Spotify-Dashboard muss **exakt** `PUBLIC_URL/api/spotify/callback` sein, mit `https`, ohne `/` am Ende |
-| Spotify: „User not registered in the Developer Dashboard“ | Das Konto unter **User Management** der Spotify-App eintragen (6.1, Punkt 4) |
+| Spotify: „User not registered in the Developer Dashboard“ | Das Konto unter **User Management** der Spotify-App eintragen (7.1, Punkt 4) |
 | Spotify-Login sagt „Falscher oder fehlender ?key=“ | `?key=` muss genau dem `OVERLAY_ADMIN_KEY` aus `.env.local` entsprechen |
-| Song erscheint nicht | Läuft die Musik auf genau dem verbundenen Konto? Pausiert zählt als „Nothing playing“ |
-| Bonus Hunt bleibt leer | API-Key prüfen. `curl -s localhost:3100/api/bonushunt` zeigt `"configured": true` und den Hunt. `pm2 logs soulstealer-overlay` zeigt Fehler von bonushunt.gg |
-| Giveaway bleibt auf „No giveaway running“ | `GIVEAWAY_API_URL` im Browser öffnen: Kommt JSON mit einem Status? `curl -s localhost:3100/api/giveaway` zeigt, wie das Overlay es versteht |
-| Overlay in OBS schwarz statt durchsichtig | Bei der Browser Source das Feld **Benutzerdefiniertes CSS** leeren und die Quelle aktualisieren |
-| Overlay unscharf | Quelle muss 1920×1080 sein und auf Bildschirmgröße stehen (9.1), nicht hoch- oder runterskaliert |
+| „Now playing“ fehlt | Läuft die Musik auf genau dem verbundenen Konto? Pausiert blendet die Zeile bewusst aus |
+| Overlay unscharf | Quelle muss 1920×1080 sein und auf Bildschirmgröße stehen (10.1), nicht hoch- oder runterskaliert |
 
 ---
 
 ### Technik in Kürze
 
 Next.js (App Router), läuft als Node-Server. Keine Datenbank: Das Spotify-Token liegt in `data/store.json`, alles andere kommt live aus den APIs.
-API-Keys bleiben auf dem Server. Der Browser bzw. OBS bekommt nur fertige Anzeigedaten über `/api/bonushunt`, `/api/giveaway` und `/api/spotify/now-playing`.
+API-Keys bleiben auf dem Server. OBS bekommt nur fertige Anzeigedaten über `/api/bonushunt`, `/api/giveaway`, `/api/spotify/now-playing` und `/api/kick/chatroom`. Der Chat kommt direkt per Websocket von Kick.

@@ -1,32 +1,28 @@
 /*
- * Soul Stealer — reaper palette.
+ * Soul Stealer — quiet reaper palette.
  *
- * Black ground, greys for structure, one red. The red is the only colour on
- * the overlay and it means something every time it appears: live, current,
- * a winner, money lost. Anything that is merely structure stays grey.
+ * Near-black ground, flat panels a shade lighter, hairlines for structure.
+ * Red is a pin-prick, not a theme: the live dot, the bonus being opened, the
+ * winner. If something is merely there, it is grey.
  */
 
 :root {
-  --ground: #070708;
-  --plate: #0b0b0d;
-  --surface-top: rgba(24, 24, 28, 0.94);
-  --surface-bottom: rgba(12, 12, 14, 0.94);
-  --surface-sunk: rgba(0, 0, 0, 0.32);
+  --ground: #0a0a0b;
+  --panel: rgba(17, 17, 19, 0.94);
+  --sunk: rgba(255, 255, 255, 0.025);
   --line: rgba(255, 255, 255, 0.07);
-  --line-strong: rgba(255, 255, 255, 0.13);
+  --line-soft: rgba(255, 255, 255, 0.045);
 
-  --text: #ececef;
-  --muted: #8d8d96;
-  --dim: #56565e;
+  --text: #ebebee;
+  --muted: #85858d;
+  --dim: #4f4f57;
 
-  --red: #e0142c;
-  --red-bright: #ff3049;
-  --red-deep: #4a0710;
-  --red-line: rgba(224, 20, 44, 0.42);
-  --red-glow: rgba(224, 20, 44, 0.32);
+  --red: #d9152c;
+  --red-soft: rgba(217, 21, 44, 0.1);
+  --red-line: rgba(217, 21, 44, 0.38);
 
-  --radius: 14px;
-  --radius-sm: 9px;
+  --radius: 12px;
+  --radius-sm: 8px;
 
   --font-ui: var(--font-inter), system-ui, sans-serif;
   --font-brand: var(--font-cinzel), Georgia, serif;
@@ -43,10 +39,9 @@ body {
   color: var(--text);
   font-family: var(--font-ui);
   -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
 }
 
-/* OBS browser sources need a transparent page from the first frame. */
+/* OBS browser sources need a transparent page. */
 body.obs {
   background: transparent !important;
   overflow: hidden;
@@ -63,8 +58,6 @@ body.obs {
   min-width: 0;
 }
 
-/* ---------------------------------------------------------------- stage -- */
-
 .stage-viewport {
   position: fixed;
   inset: 0;
@@ -78,223 +71,56 @@ body.obs {
   transform-origin: 0 0;
 }
 
-/* ----------------------------------------------------------------- card -- */
-
-.card {
+.panel {
   position: absolute;
   overflow: hidden;
   border-radius: var(--radius);
-  background: linear-gradient(180deg, var(--surface-top), var(--surface-bottom));
+  background: var(--panel);
   border: 1px solid var(--line);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.045),
-    0 18px 40px rgba(0, 0, 0, 0.45);
-  transition:
-    border-color 600ms ease,
-    box-shadow 600ms ease;
 }
-
-/* A hairline of red light along the top edge, only while something is live. */
-.card::after {
-  content: "";
-  position: absolute;
-  left: 18px;
-  right: 18px;
-  top: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--red-bright), transparent);
-  opacity: 0;
-  transition: opacity 600ms ease;
-}
-
-.card.is-live {
-  border-color: var(--red-line);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.045),
-    0 0 0 1px rgba(224, 20, 44, 0.08),
-    0 18px 50px rgba(224, 20, 44, 0.12),
-    0 18px 40px rgba(0, 0, 0, 0.45);
-}
-
-.card.is-live::after {
-  opacity: 1;
-}
-
-.card-head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  height: 22px;
-}
-
-.label {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.label-mark {
-  width: 6px;
-  height: 6px;
-  transform: rotate(45deg);
-  background: var(--dim);
-  flex: none;
-}
-
-.is-live .label-mark,
-.label-mark.red {
-  background: var(--red);
-  box-shadow: 0 0 10px var(--red-glow);
-}
-
-.chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 20px;
-  padding: 0 8px;
-  border-radius: 6px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--muted);
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--line);
-  white-space: nowrap;
-}
-
-.chip.red {
-  color: #fff;
-  background: rgba(224, 20, 44, 0.16);
-  border-color: var(--red-line);
-}
-
-.live-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--red-bright);
-  box-shadow: 0 0 0 0 var(--red-glow);
-  animation: pulse 1.6s ease-out infinite;
-}
-
-@keyframes pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(255, 48, 73, 0.55);
-  }
-  100% {
-    box-shadow: 0 0 0 7px rgba(255, 48, 73, 0);
-  }
-}
-
-/* ---------------------------------------------------------------- frame -- */
 
 .frame {
   position: absolute;
   border-radius: var(--radius);
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--line);
   pointer-events: none;
 }
 
-.frame-corner {
-  position: absolute;
-  width: 22px;
-  height: 22px;
-  border-color: var(--red);
-  border-style: solid;
-  border-width: 0;
-  filter: drop-shadow(0 0 6px var(--red-glow));
-}
-
-.frame-corner.tl {
-  left: -1px;
-  top: -1px;
-  border-left-width: 2px;
-  border-top-width: 2px;
-  border-top-left-radius: var(--radius);
-}
-.frame-corner.tr {
-  right: -1px;
-  top: -1px;
-  border-right-width: 2px;
-  border-top-width: 2px;
-  border-top-right-radius: var(--radius);
-}
-.frame-corner.bl {
-  left: -1px;
-  bottom: -1px;
-  border-left-width: 2px;
-  border-bottom-width: 2px;
-  border-bottom-left-radius: var(--radius);
-}
-.frame-corner.br {
-  right: -1px;
-  bottom: -1px;
-  border-right-width: 2px;
-  border-bottom-width: 2px;
-  border-bottom-right-radius: var(--radius);
-}
-
-.frame-tag {
-  position: absolute;
-  top: -10px;
-  left: 22px;
-  height: 20px;
-  padding: 0 10px;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  border-radius: 6px;
-  background: var(--plate);
-  border: 1px solid var(--line-strong);
+.label {
   font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
+  font-weight: 600;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--muted);
 }
 
-/* -------------------------------------------------------------- embers -- */
-
-.ember {
-  position: absolute;
-  bottom: -10px;
-  width: 3px;
-  height: 3px;
+.dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: var(--red-bright);
-  box-shadow: 0 0 8px var(--red);
-  opacity: 0;
-  animation: rise linear infinite;
+  background: var(--red);
+  flex: none;
 }
 
-@keyframes rise {
-  0% {
-    transform: translate3d(0, 0, 0) scale(1);
-    opacity: 0;
-  }
-  12% {
-    opacity: var(--o, 0.5);
-  }
-  100% {
-    transform: translate3d(var(--drift, 20px), -1100px, 0) scale(0.4);
-    opacity: 0;
-  }
+.dot.pulse {
+  animation: pulse 2s ease-in-out infinite;
 }
 
-/* ------------------------------------------------------------- motion -- */
+@keyframes pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
 
 .fade-in {
-  animation: fade-in 500ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation: fade-in 450ms ease both;
 }
 
 @keyframes fade-in {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(4px);
   }
   to {
     opacity: 1;
@@ -302,24 +128,57 @@ body.obs {
   }
 }
 
-@keyframes eq {
-  0%,
-  100% {
-    transform: scaleY(0.3);
+/* Banner rotation: the incoming layer fades in over the outgoing one. */
+.banner-layer {
+  position: absolute;
+  inset: 0;
+  /* Opaque, so the incoming banner fully covers the outgoing one. */
+  background: #111113;
+}
+
+.banner-layer.front {
+  z-index: 1;
+  animation: banner-in 800ms ease both;
+}
+
+@keyframes banner-in {
+  from {
+    opacity: 0;
   }
-  50% {
-    transform: scaleY(1);
+  to {
+    opacity: 1;
   }
+}
+
+/* Chat */
+.chat-line {
+  padding: 5px 4px;
+  line-height: 1.45;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.78);
+  overflow-wrap: anywhere;
+  animation: fade-in 300ms ease both;
+}
+
+.chat-line img.badge {
+  width: 16px;
+  height: 16px;
+  vertical-align: -3px;
+  margin-right: 4px;
+}
+
+.chat-line img.emote {
+  height: 24px;
+  max-width: 72px;
+  vertical-align: middle;
+  margin: 0 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ember,
-  .live-dot {
+  .dot.pulse,
+  .fade-in,
+  .chat-line,
+  .banner-layer.front {
     animation: none;
   }
-}
-
-.idle-mark {
-  color: var(--dim);
-  opacity: 0.55;
 }

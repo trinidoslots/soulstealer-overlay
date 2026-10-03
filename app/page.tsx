@@ -1,4 +1,5 @@
 import { adminKeyConfigured } from "@/lib/admin-key"
+import { CHAT } from "@/lib/config"
 import { bonushuntConfigured } from "@/lib/bonushunt"
 import { giveawayConfigured } from "@/lib/giveaway"
 import { spotifyConnected, spotifyCredentials } from "@/lib/spotify"
@@ -10,7 +11,9 @@ export const dynamic = "force-dynamic"
  * one URL that goes into OBS. It says only yes or no — never a value.
  */
 export default async function Home() {
+  const channel = process.env.KICK_CHANNEL?.trim() || CHAT.channel
   const rows: [string, boolean, string][] = [
+    [`Kick-Chat: kick.com/${channel}`, true, ""],
     ["bonushunt.gg API-Key", bonushuntConfigured(), "BONUSHUNT_API_KEY in .env"],
     ["Giveaway-API", giveawayConfigured(), "GIVEAWAY_API_URL in .env"],
     ["Spotify App", !!spotifyCredentials(), "SPOTIFY_CLIENT_ID + SPOTIFY_CLIENT_SECRET in .env"],
@@ -33,8 +36,9 @@ export default async function Home() {
           SOUL STEALER <span style={{ color: "var(--red)" }}>·</span> OVERLAY
         </h1>
         <p style={{ color: "var(--muted)", margin: "0 0 24px", lineHeight: 1.6 }}>
-          Eine Browser Source in OBS, 1920 × 1080:{" "}
-          <code style={{ color: "var(--text)" }}>/overlay</code>
+          Zwei Overlays, je eine Browser Source mit 1920 × 1080:{" "}
+          <code style={{ color: "var(--text)" }}>/overlay</code> für normale Streams und{" "}
+          <code style={{ color: "var(--text)" }}>/overlay/hunt</code> für Bonus Hunts.
         </p>
 
         <div style={{ border: "1px solid var(--line)", borderRadius: 14, overflow: "hidden", background: "#0f0f12" }}>
@@ -50,11 +54,10 @@ export default async function Home() {
                   borderRadius: "50%",
                   flex: "none",
                   background: ok ? "#e7e7ea" : "var(--red)",
-                  boxShadow: ok ? "none" : "0 0 10px var(--red-glow)",
-                }}
+                                  }}
               />
               <span style={{ fontWeight: 600 }}>{name}</span>
-              <span style={{ marginLeft: "auto", color: ok ? "var(--muted)" : "var(--red-bright)", fontSize: 13, textAlign: "right" }}>
+              <span style={{ marginLeft: "auto", color: ok ? "var(--muted)" : "var(--red)", fontSize: 13, textAlign: "right" }}>
                 {ok ? "OK" : hint}
               </span>
             </div>
@@ -65,8 +68,14 @@ export default async function Home() {
           <a href="/overlay" style={button(true)}>
             Overlay öffnen
           </a>
+          <a href="/overlay/hunt" style={button(true)}>
+            Hunt-Overlay öffnen
+          </a>
           <a href="/overlay?demo=1" style={button(false)}>
-            Demo mit Beispieldaten
+            Demo
+          </a>
+          <a href="/overlay/hunt?demo=1" style={button(false)}>
+            Hunt-Demo
           </a>
         </div>
       </div>
@@ -83,6 +92,6 @@ function button(primary: boolean): React.CSSProperties {
     textDecoration: "none",
     color: "#fff",
     background: primary ? "var(--red)" : "rgba(255,255,255,0.05)",
-    border: `1px solid ${primary ? "var(--red)" : "var(--line-strong)"}`,
+    border: `1px solid ${primary ? "var(--red)" : "var(--line)"}`,
   }
 }
