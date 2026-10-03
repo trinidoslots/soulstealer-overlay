@@ -4,8 +4,11 @@ import { useEffect, useState, type CSSProperties } from "react"
 import { BANNER_SECONDS, BANNERS, type Banner } from "@/lib/config"
 import { useNow } from "@/components/use-poll"
 
-/** The rotating banner. Image banners are fitted, never cropped. */
-export function BannerRotator({ style }: { style: CSSProperties }) {
+/**
+ * The rotating banner. `wide` is the full-width slot on /overlay, which shows
+ * an image banner's `wide` artwork when it has one. Images are never cropped.
+ */
+export function BannerRotator({ style, wide }: { style: CSSProperties; wide: boolean }) {
   const now = useNow(1000)
   const index = BANNERS.length ? Math.floor(now / (BANNER_SECONDS * 1000)) % BANNERS.length : 0
   const [previous, setPrevious] = useState(index)
@@ -17,8 +20,8 @@ export function BannerRotator({ style }: { style: CSSProperties }) {
     setCurrent(index)
     // Preload the one after, so its swap never waits on the network.
     const next = BANNERS[(index + 1) % BANNERS.length]
-    if (next && "image" in next) new Image().src = next.image
-  }, [index, current])
+    if (next && "image" in next) new Image().src = artwork(next, wide)
+  }, [index, current, wide])
 
   if (!BANNERS.length) return null
 
@@ -26,21 +29,25 @@ export function BannerRotator({ style }: { style: CSSProperties }) {
     <div className="panel" style={{ ...style, background: "var(--panel)" }}>
       {previous !== current && (
         <div className="banner-layer" key={`b-${previous}`}>
-          <BannerFace banner={BANNERS[previous]} />
+          <BannerFace banner={BANNERS[previous]} wide={wide} />
         </div>
       )}
       <div className="banner-layer front" key={`f-${current}`}>
-        <BannerFace banner={BANNERS[current]} />
+        <BannerFace banner={BANNERS[current]} wide={wide} />
       </div>
     </div>
   )
 }
 
-function BannerFace({ banner }: { banner: Banner }) {
+function artwork(banner: Extract<Banner, { image: string }>, wide: boolean) {
+  return wide && banner.wide ? banner.wide : banner.image
+}
+
+function BannerFace({ banner, wide }: { banner: Banner; wide: boolean }) {
   if ("image" in banner) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
-      <img src={banner.image} alt={banner.alt} style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
+      <img src={artwork(banner, wide)} alt={banner.alt} style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
     )
   }
 

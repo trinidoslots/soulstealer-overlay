@@ -5,9 +5,9 @@
  * the OBS sources sit underneath at exactly these rectangles. The numbers are
  * in the README too, so nobody has to measure in OBS.
  *
- * Both overlays share everything except the bottom-left slot: /overlay puts
- * the brand and the song there, /overlay/hunt the bonus hunt. The big banner
- * stays bottom right on both.
+ * The bottom row is the one difference between the two overlays: /overlay
+ * gives all of it to the banner, /overlay/hunt splits it into the hunt on the
+ * left and the banner on the right.
  */
 
 export type Rect = { x: number; y: number; w: number; h: number }
@@ -18,8 +18,10 @@ export const LAYOUT = {
   game: { x: 24, y: 24, w: 1376, h: 774 },
   cam: { x: 1424, y: 24, w: 472, h: 266 },
   chat: { x: 1424, y: 314, w: 472, h: 742 },
-  /** Brand and now playing on /overlay, the bonus hunt on /overlay/hunt. */
-  side: { x: 24, y: 822, w: 440, h: 234 },
+  /** /overlay: the banner across the whole bottom row. */
+  bannerWide: { x: 24, y: 822, w: 1376, h: 234 },
+  /** /overlay/hunt: the hunt bottom left, the banner beside it. */
+  hunt: { x: 24, y: 822, w: 440, h: 234 },
   banner: { x: 488, y: 822, w: 912, h: 234 },
 } satisfies Record<string, Rect>
 

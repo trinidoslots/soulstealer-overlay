@@ -20,7 +20,7 @@ export function HuntPanel({ demo }: { demo: boolean }) {
   const hunt = data?.hunt ?? null
 
   return (
-    <div className="panel" style={{ ...at(LAYOUT.side), padding: "18px 22px", display: "flex", flexDirection: "column" }}>
+    <div className="panel" style={{ ...at(LAYOUT.hunt), padding: "18px 22px", display: "flex", flexDirection: "column" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, height: 14 }}>
         {hunt?.status === "opening" && <span className="dot pulse" />}
         <span className="label">Bonus Hunt{hunt ? ` · ${STATUS[hunt.status]}` : ""}</span>

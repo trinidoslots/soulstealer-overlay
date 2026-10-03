@@ -6,10 +6,10 @@ Es gibt **zwei Overlays**. Jedes ist genau **eine Browser Source mit 1920 × 108
 
 | Overlay | URL | Wofür |
 | --- | --- | --- |
-| Standard | `https://<deine-domain>/overlay` | Normale Streams. Unten links Logo, Name und Website |
-| Hunt | `https://<deine-domain>/overlay/hunt` | Bonus-Hunt-Streams. Unten links der Bonus Hunt |
+| Standard | `https://<deine-domain>/overlay` | Normale Streams. Unten ein Banner über die ganze Breite |
+| Hunt | `https://<deine-domain>/overlay/hunt` | Bonus-Hunt-Streams. Unten links der Bonus Hunt, rechts daneben der Banner |
 
-Alles andere ist auf beiden Overlays gleich: Chat mit „Now playing“ und Giveaways oben, großer Banner unten rechts.
+Spiel, Cam und Chat (mit „Now playing“ und Giveaways oben) sind auf beiden Overlays gleich.
 
 **Standard**
 
@@ -26,8 +26,7 @@ Auf beiden Overlays:
 | Links oben (groß) | Ausschnitt für das Spiel | – |
 | Rechts oben | Ausschnitt für die Cam | – |
 | Rechts | Kick-Chat. Ganz oben **Now playing**, solange ein Song läuft. Startet ein Giveaway, erscheint es **oben in der Chat-Box** und schiebt den Chat nach unten. Ist das Giveaway vorbei, verschwindet es wieder | Kick, Spotify, Giveaway-Modul auf soul-stealer.com |
-| Links unten | Standard: Logo, Name, Website. Hunt: Bonus Hunt mit Bonusliste | `lib/config.ts` / bonushunt.gg |
-| Rechts unten | Großer rotierender Banner, auf beiden Overlays | `lib/config.ts` |
+| Unten | Standard: rotierender Banner über die ganze Breite (1376 × 234). Hunt: Bonus Hunt links (440 × 234), Banner rechts (912 × 234) | `lib/config.ts` / bonushunt.gg |
 
 Spiel und Cam sind **echte Löcher** im Overlay. Das Overlay liegt in OBS ganz oben, Spiel und Cam darunter scheinen durch. Den Chat zeichnet das Overlay selbst, dafür brauchst du keine eigene Chat-Quelle mehr.
 
@@ -46,7 +45,7 @@ Spiel und Cam sind **echte Löcher** im Overlay. Das Overlay liegt in OBS ganz o
 9. [Domain und HTTPS (nginx)](#9-domain-und-https-nginx)
 10. [In OBS einrichten](#10-in-obs-einrichten)
 11. [Banner einrichten](#11-banner-einrichten)
-12. [Texte, Logo und Farben anpassen](#12-texte-logo-und-farben-anpassen)
+12. [Texte und Farben anpassen](#12-texte-und-farben-anpassen)
 13. [Updates einspielen](#13-updates-einspielen)
 14. [Alternative: Docker](#14-alternative-docker)
 15. [Fehlerbehebung](#15-fehlerbehebung)
@@ -117,7 +116,7 @@ Gebraucht wird das nur für das **Hunt-Overlay**. Es liest denselben Hunt wie di
 
 Was das Hunt-Widget zeigt:
 
-Das Widget sitzt unten links (dort, wo im Standard-Overlay das Logo steht):
+Das Widget sitzt im Hunt-Overlay unten links, der Banner rückt dafür nach rechts:
 
 - **Oben rechts** der Fortschritt, z. B. `6 / 14`
 - **Drei Zahlen**: Start, Gewinn und Break-Even. Beim Öffnen ist das der Live-Break-Even, also der Ø-Multi, der für den Rest noch nötig ist
@@ -328,11 +327,16 @@ Tipps:
 
 ## 11. Banner einrichten
 
-Der Banner-Platz unten rechts (912 × 234) ist auf beiden Overlays gleich. Er rotiert durch die Einträge in `lib/config.ts` → `BANNERS`, alle `BANNER_SECONDS` Sekunden (Standard 12).
+Der Banner rotiert durch die Einträge in `lib/config.ts` → `BANNERS`, alle `BANNER_SECONDS` Sekunden (Standard 12). Er ist unterschiedlich breit:
+
+| Overlay | Banner-Größe |
+| --- | --- |
+| `/overlay` | 1376 × 234, über die ganze Breite unter dem Spiel |
+| `/overlay/hunt` | 912 × 234, rechts neben dem Hunt |
 
 Es gibt zwei Arten von Bannern. Beide lassen sich mischen:
 
-**a) Text-Banner** im Stil des Overlays. Dafür brauchst du keine Grafik:
+**a) Text-Banner** im Stil des Overlays. Dafür brauchst du keine Grafik, und sie passen automatisch in beide Größen:
 
 ```ts
 { kicker: "Leaderboards", title: "Over $5,000 paid out every month", cta: "!website" },
@@ -340,22 +344,24 @@ Es gibt zwei Arten von Bannern. Beide lassen sich mischen:
 
 **b) Eigene Bilder:**
 
-1. Bild in **1824 × 468 px** gestalten (PNG oder JPG). Das ist die doppelte Größe des Slots, so bleibt es scharf.
-2. Datei nach `public/banners/` legen, z. B. `public/banners/leaderboard.png`.
+1. Bild gestalten (PNG oder JPG), jeweils doppelte Slot-Größe, damit es scharf bleibt:
+   - **1824 × 468 px** für das Hunt-Overlay (Pflicht)
+   - **2752 × 468 px** für das Standard-Overlay (optional)
+2. Dateien nach `public/banners/` legen, z. B. `leaderboard.png` und `leaderboard-wide.png`.
 3. In `lib/config.ts` eintragen:
    ```ts
-   { image: "/banners/leaderboard.png", alt: "Leaderboard" },
+   { image: "/banners/leaderboard.png", wide: "/banners/leaderboard-wide.png", alt: "Leaderboard" },
    ```
+   Ohne `wide` zeigt das Standard-Overlay das normale Bild mittig. Links und rechts bleibt dann dunkler Rand, abgeschnitten wird nichts.
 4. Neu bauen (Schritt 13).
 
-## 12. Texte, Logo und Farben anpassen
+## 12. Texte und Farben anpassen
 
 Nach jeder Änderung [Schritt 13](#13-updates-einspielen) ausführen.
 
 | Was | Wo |
 | --- | --- |
-| Name, Website-Text, Währung | `lib/config.ts` → `BRAND` |
-| Echtes Logo statt der gezeichneten Sense | Datei nach `public/logo.png` legen, in `lib/config.ts` `logo: "/logo.png"` setzen |
+| Währung der Hunt-Zahlen | `lib/config.ts` → `BRAND` |
 | Kick-Kanal, Namensfarben | `lib/config.ts` → `CHAT` |
 | Banner | `lib/config.ts` → `BANNERS` (Schritt 11) |
 | Farben (Rot, Grautöne, Hintergrund) | `app/globals.css`, ganz oben unter `:root` |

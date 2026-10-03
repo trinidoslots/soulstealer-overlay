@@ -3,9 +3,14 @@
 Eigene Banner-Bilder kommen in diesen Ordner und werden in `lib/config.ts` unter `BANNERS` eingetragen:
 
 ```ts
-{ image: "/banners/leaderboard.png", alt: "Leaderboard" },
+{ image: "/banners/leaderboard.png", wide: "/banners/leaderboard-wide.png", alt: "Leaderboard" },
 ```
 
-- Format: **1824 × 468 px** (doppelte Slot-Größe, bleibt in OBS scharf), PNG oder JPG
-- Wichtige Inhalte nicht ganz an den Rand setzen: der Slot hat abgerundete Ecken
-- Der Banner steht auf beiden Overlays an derselben Stelle in derselben Größe
+| Feld | Größe | Wo |
+| --- | --- | --- |
+| `image` | **1824 × 468 px** | Hunt-Overlay, rechts neben dem Hunt (Pflicht) |
+| `wide` | **2752 × 468 px** | Standard-Overlay, über die ganze Breite (optional, sonst wird `image` mittig gezeigt) |
+
+- Beide Größen sind die doppelte Slot-Größe. So bleiben die Bilder in OBS scharf
+- PNG oder JPG
+- Wichtige Inhalte nicht ganz an den Rand setzen, der Slot hat abgerundete Ecken
