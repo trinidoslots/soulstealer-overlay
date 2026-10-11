@@ -19,20 +19,30 @@ const ICONS = {
  * one here gets it instead of the small icon in a ring.
  */
 /**
- * Real slot thumbnails for the two cards behind the "?": put two portrait
- * images (3:4) in store-items/thumbs/ and list them here, e.g.
- * ["thumbs/gates.png", "thumbs/sweet-bonanza.png"]. Empty means stylised
- * placeholders are drawn instead.
+ * The two slots behind the "?" on each bonus buy, left then right. Portrait
+ * images (3:4) in store-items/thumbs/, taken from the slots table in Supabase
+ * (image_url). A step with no pair gets stylised placeholders.
  */
-// From the slots table (Supabase), image_url of each game.
-const THUMBS = ["thumbs/gates-of-olympus-1000.png", "thumbs/sweet-bonanza-1000.png"]
+const THUMBS = {
+  20: ["gates-of-olympus-1000", "sweet-bonanza-1000"],
+  40: ["wanted-dead-or-a-wild", "le-bandit"],
+  60: ["sugar-rush-1000", "the-dog-house-megaways"],
+  80: ["mental-2", "chaos-crew-2"],
+  100: ["starlight-princess-1000", "fire-in-the-hole-3"],
+}
+
+const dataUri = (file) =>
+  `data:image/${path.extname(file).slice(1).replace("svg", "svg+xml")};base64,${fs.readFileSync(path.join(__dirname, file)).toString("base64")}`
+
+/** The Shuffle "S" mark, white, for the tip cards. */
+const SHUFFLE = dataUri("logos/shuffle.svg")
 
 /**
  * The same fan for everything that is not a slot: a red card in front with
  * the item's icon and a tag, and two dark cards behind with a faint copy.
  */
 const iconFan = (icon, tag) => () => {
-  const svg = `<svg viewBox="0 0 64 64">${ICONS[icon]}</svg>`
+  const svg = icon === "shuffle" ? `<img class="logo" src="${SHUFFLE}" alt="">` : `<svg viewBox="0 0 64 64">${ICONS[icon]}</svg>`
   return `<div class="fan icon-fan"><div class="glow"></div>
     <div class="thumb thumb-0"><div class="t-art t-graphite">${svg}</div></div>
     <div class="thumb thumb-1"><div class="t-art t-charcoal">${svg}</div></div>
@@ -43,9 +53,9 @@ const iconFan = (icon, tag) => () => {
 const ART = {
   gift: iconFan("gift", "Gifted sub"),
   vip: iconFan("vip", "VIP"),
-  tip: iconFan("tip", "Tip"),
+  tip: iconFan("shuffle", "Tip"),
   // Two slot thumbnails fanned out behind a "?" — any slot you like.
-  bonus: () => {
+  bonus: (item) => {
     const faces = [
       // Mostly hidden behind the "?", so no symbol that would read half cut off.
       { cls: "t-graphite", symbol: "" },
@@ -54,9 +64,10 @@ const ART = {
     ]
     const card = (face, index) => {
       // The front card is always the "?", never a real game.
-      const file = index < 2 ? THUMBS[index] : undefined
+      const slug = index < 2 ? THUMBS[item.amount]?.[index] : undefined
+      const file = slug && `thumbs/${slug}.png`
       const inner = file
-        ? `<img src="data:image/${path.extname(file).slice(1)};base64,${fs.readFileSync(path.join(__dirname, file)).toString("base64")}">`
+        ? `<img src="${dataUri(file)}">`
         : `<div class="t-art ${face.cls}"><span class="t-sym">${face.symbol}</span><span class="t-reels"></span></div>`
       // Real art is graded into the card's palette — grey, dark, a touch of
       // red — and fades into the ground, so it reads as part of the card.
@@ -106,6 +117,8 @@ const ART_CSS = `
 .icon-fan .thumb-0 svg,.icon-fan .thumb-1 svg{width:46px;height:46px;stroke:rgba(255,255,255,.18);position:relative;z-index:1}
 .icon-fan .thumb-0 svg .accent,.icon-fan .thumb-1 svg .accent{stroke:rgba(255,255,255,.18)}
 .icon-fan .thumb-0 svg .accent-fill,.icon-fan .thumb-1 svg .accent-fill{fill:rgba(255,255,255,.18)}
+.icon-fan .logo{width:40px;height:auto;position:relative;z-index:1;opacity:.18}
+.icon-fan .thumb-2 .logo{width:72px;margin-top:-18px;opacity:1;filter:drop-shadow(0 0 16px rgba(255,60,80,.55))}
 .icon-fan .thumb-2 svg{width:84px;height:84px;margin-top:-18px;stroke:#fff;stroke-width:2.4;position:relative;z-index:1;filter:drop-shadow(0 0 16px rgba(255,60,80,.55))}
 .icon-fan .thumb-2 svg .accent{stroke:#fff}
 .icon-fan .thumb-2 svg .accent-fill{fill:#fff}
@@ -129,7 +142,7 @@ const ART_CSS = `
 const ITEMS = [
   { slug: "gifted-sub", icon: "gift", value: "Gifted Sub", title: "Kick subscription", sub: "Gifted to you on stream" },
   { slug: "vip", icon: "vip", value: "VIP", title: "Kick VIP badge", sub: "Stand out in chat" },
-  ...[20, 40, 60, 80, 100].map((n) => ({ slug: `bonus-buy-${n}`, icon: "bonus", value: `$${n}`, title: "Bonus Buy", sub: "Slot of your choice", note: "We split whatever it pays" })),
+  ...[20, 40, 60, 80, 100].map((n) => ({ slug: `bonus-buy-${n}`, amount: n, icon: "bonus", value: `$${n}`, title: "Bonus Buy", sub: "Slot of your choice", note: "We split whatever it pays" })),
   ...[5, 10, 20, 50].map((n) => ({ slug: `tip-${n}`, icon: "tip", value: `$${n}`, title: "Tip", sub: "Sent straight to you" })),
 ]
 
@@ -164,7 +177,7 @@ ${ART_CSS}
 .note::before{content:"";width:6px;height:6px;border-radius:50%;background:#d9152c;flex:none}
 </style></head><body><div class="card"><div class="warmth"></div>
 <div class="head"><span class="dot"></span>Soul Stealer · Store</div>
-<div class="art">${ART[item.icon] ? ART[item.icon]() : `<div class="ring"><svg viewBox="0 0 64 64">${ICONS[item.icon]}</svg></div>`}</div>
+<div class="art">${ART[item.icon] ? ART[item.icon](item) : `<div class="ring"><svg viewBox="0 0 64 64">${ICONS[item.icon]}</svg></div>`}</div>
 <div class="foot"><div class="value">${item.value}</div><div class="title">${item.title}</div><div class="line"></div><div class="sub">${item.sub}</div>${item.note ? `<div class="note">${item.note}</div>` : ""}</div>
 </div></body></html>`
 
